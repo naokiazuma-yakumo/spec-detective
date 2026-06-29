@@ -2,6 +2,10 @@
 
 spec-detective runs entirely on **Google Cloud** (Cloud Run + Gemini, optionally Google ADK) with **no external dependencies** — so it survives the two-round live judging.
 
+![spec-detective architecture](./architecture.png)
+
+> The image above uses official Google Cloud icons and is the ProtoPedia「システム構成」upload. It is generated from code by [`architecture_diagram.py`](./architecture_diagram.py) (`python docs/architecture_diagram.py`, needs Graphviz). The Mermaid diagrams below are the editable, version-controlled source.
+
 ## System / deployment view
 
 ```mermaid
