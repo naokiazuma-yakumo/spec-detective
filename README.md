@@ -5,59 +5,19 @@
 
 **An AI agent that probes your live API to expose where the spec (建前) and reality (本音) disagree.**
 
-仕様書（こう動くと書いてある＝建前）と、実際に動くシステム（本当はこう動く＝本音）の食い違い＝バグ・セキュリティ穴を、AIエージェントが**実物を操作して**暴く探偵。
+仕様書（建前）と、実際に動くシステム（本音）の食い違い＝バグ・セキュリティ穴を、AIエージェントが**実物にHTTPを撃って**暴く「セキュリティ探偵」。コードレビューや静的解析は"文字"を読むだけで、動かして初めて出る穴は見つけられない。spec-detective は仕様の**自然言語の約束**（例：「空パスワードは弾く」「他人のデータは見えない」）を正解（オラクル）に据え、その約束破りを実物操作で証拠付きに暴く。
 
-## Why
-
-Code review, linters and static analysis only read the *text* of your code — they never run it. The holes that only surface when the system is actually running are, by definition, invisible to them. spec-detective fires real requests at the running system and watches how it behaves.
-
-- Spec: *「空パスワードは弾く」* → fire an empty password at the real API → **it goes through**.
-- Spec: *「他人のデータは見えない」* → shift the ID by one → **someone else's record comes back** (IDOR).
-- Spec: *「削除すると消える」* → hit the API directly → **it's still there** (soft-delete leak).
-
-The angle that sets this apart, in one line:
-
-> A **DAST** (ZAP, Burp) never reads your spec. A **contract fuzzer** (Schemathesis, RESTler) reads it but only checks the *schema* — types, status codes, response shape. An **AI pentester** (XBOW, PentestGPT) is smart but doesn't use the spec as ground truth — it asks "is this exploitable?". spec-detective is the only one that takes the spec's **natural-language promises** ("empty passwords are rejected", "you can't see others' data") as the oracle, and has an LLM agent prove where the running system *breaks its own promise* — with evidence.
-
-Not "is it exploitable?" and not "does it match the schema?" — **"is the system lying about its own spec?"**
-
-## Why an agent (not just a test suite)
-
-Running a fixed set of tests a human wrote is just automated testing — no agent needed. spec-detective works like a detective:
-
-1. reads the spec and guesses where reality probably **lies** (hypothesis)
-2. fires real HTTP requests at the system (probe)
-3. reads what comes back and decides where to **dig next** (adapt)
-4. holds the evidence (request / response) and reports "here's a hole", severity-ranked
-
-This *hypothesis → probe → observe → next-move* loop, run against a system whose behavior it can't predict, is why it has to be an agent. **Gemini is the reasoning head.**
-
-## Human-in-the-loop
-
-It never attacks, mutates or fixes automatically. It presents evidence; a human judges and approves.
+Not *"is it exploitable?"* and not *"does it match the schema?"* — **"is the system lying about its own spec?"**
 
 ## Stack
 
-- **Google Cloud Run** — hosts both the target demo app and the agent
-- **Gemini API** — the agent's reasoning (Google ADK optional, for multi-step autonomy)
-- No external dependencies — entirely on Google Cloud, so it survives the two-round live judging
-
-## Architecture
-
-See **[docs/architecture.md](./docs/architecture.md)** — runs entirely on Google Cloud (Cloud Run + Gemini, optionally Google ADK), with the agent's hypothesis→probe→interpret→dig loop diagrammed.
-
-## Layout
-
-| dir | what |
-|---|---|
-| `demo-app/` | a deliberately-vulnerable target: Health Records API (synthetic) + its [OpenAPI spec](./demo-app/openapi.yaml) |
-| `agent/` | the detective: hypothesis → probe → interpret → dig loop (Gemini / ADK) |
-| `web/` | UI: spec vs reality evidence, side by side, severity-ranked |
-| `docs/` | [concept](./docs/concept.md) · [architecture](./docs/architecture.md) · [ProtoPedia submission draft](./docs/protopedia.md) |
+- **Google Cloud Run** — hosts the target app and the agent
+- **Gemini API** (＋ Google ADK) — the agent's reasoning
+- No external dependencies — entirely on Google Cloud
 
 ## Status
 
-🚧 **WIP** — building toward submission (deadline 2026-07-10 23:59 JST).
+🚧 **設計フェーズ。実装はこれから。** 実装の進行に合わせて、コードと**その設計**をこのリポジトリに追加していきます（設計だけの先行ドキュメントは置きません）。
 
 ## License
 
