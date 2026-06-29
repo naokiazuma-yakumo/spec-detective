@@ -42,14 +42,18 @@ It never attacks, mutates or fixes automatically. It presents evidence; a human 
 - **Gemini API** — the agent's reasoning (Google ADK optional, for multi-step autonomy)
 - No external dependencies — entirely on Google Cloud, so it survives the two-round live judging
 
+## Architecture
+
+See **[docs/architecture.md](./docs/architecture.md)** — runs entirely on Google Cloud (Cloud Run + Gemini, optionally Google ADK), with the agent's hypothesis→probe→interpret→dig loop diagrammed.
+
 ## Layout
 
 | dir | what |
 |---|---|
-| `demo-app/` | a deliberately-vulnerable target: a small REST API + its OpenAPI spec |
-| `agent/` | the detective: hypothesis → probe → interpret → dig loop (Gemini) |
+| `demo-app/` | a deliberately-vulnerable target: Health Records API (synthetic) + its [OpenAPI spec](./demo-app/openapi.yaml) |
+| `agent/` | the detective: hypothesis → probe → interpret → dig loop (Gemini / ADK) |
 | `web/` | UI: spec vs reality evidence, side by side, severity-ranked |
-| `docs/` | concept writeup (feeds the ProtoPedia entry) |
+| `docs/` | [concept](./docs/concept.md) · [architecture](./docs/architecture.md) · [ProtoPedia submission draft](./docs/protopedia.md) |
 
 ## Status
 
