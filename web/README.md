@@ -11,4 +11,8 @@ Each finding shows:
 
 Headline framing: *human review missed N holes → the agent found them in 90s, M of which are security.*
 
-> TODO: pick the stack, build the evidence-pair view + severity list + the live "watch the agent probe" view for the 3-min demo video.
+## Language — bilingual (JA + EN)
+
+The UI must support **Japanese and English** (i18n, runtime-switchable). Judges are Japanese, so JA is primary for the demo/video; EN keeps the public product accessible. Build with an i18n setup from the start (e.g. `next-intl` / `react-i18next`) — don't hard-code strings. Findings text from the agent (spec_promise, why, etc.) should also be presentable in both languages.
+
+> TODO: pick the stack, set up i18n (JA default + EN), build the evidence-pair view + severity list + the live "watch the agent probe" view for the 3-min demo video.
