@@ -15,7 +15,11 @@ Code review, linters and static analysis only read the *text* of your code — t
 - Spec: *「他人のデータは見えない」* → shift the ID by one → **someone else's record comes back** (IDOR).
 - Spec: *「削除すると消える」* → hit the API directly → **it's still there** (soft-delete leak).
 
-The angle that sets this apart from a generic DAST / AI pentester: it audits **the contradiction against the written specification**, not just "is this endpoint exploitable".
+The angle that sets this apart, in one line:
+
+> A **DAST** (ZAP, Burp) never reads your spec. A **contract fuzzer** (Schemathesis, RESTler) reads it but only checks the *schema* — types, status codes, response shape. An **AI pentester** (XBOW, PentestGPT) is smart but doesn't use the spec as ground truth — it asks "is this exploitable?". spec-detective is the only one that takes the spec's **natural-language promises** ("empty passwords are rejected", "you can't see others' data") as the oracle, and has an LLM agent prove where the running system *breaks its own promise* — with evidence.
+
+Not "is it exploitable?" and not "does it match the schema?" — **"is the system lying about its own spec?"**
 
 ## Why an agent (not just a test suite)
 

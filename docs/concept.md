@@ -15,9 +15,17 @@ Static review reads *text*. It never runs the system, so the holes that only app
 
 A fixed test suite is just automated testing. spec-detective forms its own hypotheses about where the spec lies, probes the live system, reads the reaction, and decides the next move — against a system whose behavior it can't predict. That self-driving loop is the agent necessity.
 
-## How it differs from a generic DAST / AI pentester
+## How it differs from DAST / contract fuzzers / AI pentesters
 
-A DAST asks "is this endpoint exploitable?". spec-detective asks **"does the system contradict its own written specification?"** — the OpenAPI contract is the oracle. The finding isn't just "IDOR here", it's "the spec promised isolation and the running system breaks that promise, here's the proof."
+Each existing category puts its "ground truth" somewhere else:
+
+- **DAST** (ZAP, Burp) never reads the spec — it asks "is there a hole?" and doesn't understand intent (treats 200 OK as success, misses IDOR/BOLA).
+- **Contract fuzzers** (Schemathesis, RESTler, Dredd) read the spec but only as a **schema** oracle — types, status codes, response shape, 5xx. They explicitly don't verify business logic or the prose authz promises.
+- **AI pentesters** (XBOW, PentestGPT) are smart and adaptive but don't use the spec as ground truth — they ask "is this exploitable?".
+
+spec-detective sits on the empty intersection: it takes the spec's **natural-language promises** as the oracle and uses an **adaptive LLM agent** to prove where the system breaks them. The finding isn't "IDOR here" — it's *"the spec promised isolation, the running system breaks that promise, here's the request/response proof."*
+
+> Positioning note: don't claim "first AI security tool" (AI pentesting is an established, well-funded category). The novelty is the **intersection** — spec-as-semantic-oracle × adaptive LLM probing.
 
 ## Demo arc (3 min)
 
