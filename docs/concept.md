@@ -29,10 +29,10 @@ spec-detective sits on the empty intersection: it takes the spec's **natural-lan
 
 ## Demo arc (3 min)
 
-1. Show the demo app + its spec.
+1. Show the demo app (a Health Records API, synthetic data) + its spec.
 2. Agent reads the spec, says *「空パスワードを弾くと書いてある、怪しい」* (hypothesis).
 3. Agent fires an empty password at the **real** API → *「通りました」* + the request/response evidence, in red.
-4. Agent keeps going: shifts an ID → finds the auth leak.
+4. Agent keeps going: shifts a record ID → *「他人の診療記録が返ってきた」* (IDOR), then deletes and re-reads → *「消したのに残ってる」*.
 5. Headline: *human review missed N holes — agent found them in 90s, M security.*
 6. Findings presented to a human to approve (the agent doesn't fix anything itself).
 

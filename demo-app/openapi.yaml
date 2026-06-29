@@ -1,0 +1,208 @@
+openapi: 3.0.3
+info:
+  title: Health Records API (demo target)
+  version: "1.0.0"
+  description: |
+    A small health-records API used as the target for **spec-detective**.
+
+    All data is **synthetic** — no real patients. This service is the punching bag the
+    detective agent probes; its implementation deliberately contradicts some of the
+    promises written below.
+
+    ## Design note for readers
+    The behavioural guarantees of this API live in the **prose `description` fields**
+    below (e.g. "only the owner can read a record"), *not* in the JSON Schemas. The
+    schemas are intentionally permissive. A schema-conformance fuzzer therefore cannot
+    tell whether these promises hold — that is exactly the gap spec-detective targets:
+    it reads the natural-language promises and checks them against the running system.
+
+servers:
+  - url: https://demo-app-REPLACE.run.app
+    description: Cloud Run deployment
+
+tags:
+  - name: auth
+  - name: records
+
+paths:
+  /signup:
+    post:
+      tags: [auth]
+      summary: Register a new user
+      description: |
+        Registers a user.
+
+        **Promise:** the password must be **at least 8 characters**. An empty or
+        shorter password is rejected with **400 Bad Request**.
+
+        **Promise:** only `email` and `password` are read from the request body.
+        Any other field is ignored — in particular a user **cannot** set their own
+        `role`; every account is created as a regular user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400':
+          description: Invalid email or password (e.g. password shorter than 8 chars)
+
+  /login:
+    post:
+      tags: [auth]
+      summary: Obtain a bearer token
+      description: Exchanges email + password for a bearer token used on all other endpoints.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '401':
+          description: Bad credentials
+
+  /records:
+    get:
+      tags: [records]
+      summary: List the caller's records
+      description: |
+        **Promise:** returns **only** the records owned by the authenticated caller.
+        Records belonging to other users are never included.
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Record' }
+        '401':
+          description: Missing or invalid token
+    post:
+      tags: [records]
+      summary: Create a record
+      description: Creates a health record owned by the authenticated caller.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RecordInput' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Record' }
+        '401':
+          description: Missing or invalid token
+
+  /records/{id}:
+    get:
+      tags: [records]
+      summary: Get one record
+      description: |
+        Returns a single health record.
+
+        **Promise:** the record is returned **only if it is owned by the authenticated
+        caller**. Requesting a record owned by another user returns **403 Forbidden** —
+        one user can never read another user's record.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Record' }
+        '403':
+          description: The record belongs to another user
+        '404':
+          description: No such record
+    delete:
+      tags: [records]
+      summary: Delete a record
+      description: |
+        Deletes a health record.
+
+        **Promise:** only the **owner** may delete a record; another user's delete
+        request returns **403 Forbidden**.
+
+        **Promise:** deletion is **permanent**. After a successful delete,
+        `GET /records/{id}` returns **404 Not Found** and the record is no longer
+        readable through any endpoint.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        '204':
+          description: Deleted
+        '403':
+          description: The record belongs to another user
+        '404':
+          description: No such record
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    # Schemas are intentionally permissive — the guarantees are in the prose above.
+    SignupRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string }   # no minLength here on purpose (see /signup prose)
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string }
+
+    TokenResponse:
+      type: object
+      properties:
+        token: { type: string }
+
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string }
+        role: { type: string, description: "Always 'user' for self-registered accounts." }
+
+    RecordInput:
+      type: object
+      required: [patient_name, diagnosis]
+      properties:
+        patient_name: { type: string }
+        diagnosis: { type: string }
+        note: { type: string }
+
+    Record:
+      type: object
+      properties:
+        id: { type: integer }
+        owner_id: { type: string }
+        patient_name: { type: string }
+        diagnosis: { type: string }
+        note: { type: string }
